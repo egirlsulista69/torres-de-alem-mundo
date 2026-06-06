@@ -186,25 +186,16 @@
         
         let escutadorAtivo = null;
 
-        // FUNÇÃO ATUALIZADA - ANTI-ERROS
+        // gerar email fake
 function gerarEmailFake(usuario) {
     let nomeLimpo = usuario.trim().toLowerCase();
-    
-    // 1. Se o usuário digitou um e-mail inteiro por engano, pega só o que vem antes do @
     if (nomeLimpo.includes('@')) {
         nomeLimpo = nomeLimpo.split('@')[0];
     }
-    
-    // 2. Remove acentos automaticamente (ex: "joão" vira "joao")
     nomeLimpo = nomeLimpo.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-    
-    // 3. Remove espaços e qualquer caractere especial inválido para e-mails (ex: de "mestre:1" vira "mestre1")
     nomeLimpo = nomeLimpo.replace(/[^a-z0-9_.-]/g, '');
-    
-    // 4. Se após a limpeza o campo ficar vazio, põe um padrão seguro
-    if (!nomeLimpo) {
-        nomeLimpo = "usuarioanonimo";
-    }
+    return nomeLimpo + "@sistemarpg.com";
+}
     
     return nomeLimpo + "@sistemarpg.com";
 }
@@ -231,23 +222,26 @@ function gerarEmailFake(usuario) {
         });
 
         // 3. FUNÇÃO DE LOGIN DO PAINEL
-        function fazerLogin() {
-            const usuario = document.getElementById('login-usuario').value;
-            const senha = document.getElementById('login-senha').value;
-            const divErro = document.getElementById('erro-login');
-            divErro.innerText = "";
+       function fazerLogin() {
+    const usuario = document.getElementById('login-usuario').value;
+    const senha = document.getElementById('login-senha').value;
+    const divErro = document.getElementById('erro-login');
+    divErro.innerText = "";
 
-            if (!usuario || !senha) {
-                divErro.innerText = "Preencha todos os campos.";
-                return;
-            }
+    if (!usuario || !senha) {
+        divErro.innerText = "Preencha todos os campos.";
+        return;
+    }
 
-            auth.signInWithEmailAndPassword(gerarEmailFake(usuario), senha)
-                .catch((error) => {
-                    divErro.innerText = "Acesso negado. Usuário ou senha incorretos.";
-                    console.error(error);
-                });
-        }
+    const emailGerado = gerarEmailFake(usuario);
+
+    auth.signInWithEmailAndPassword(emailGerado, senha)
+        .catch((error) => {
+            // Agora o código do erro vai aparecer direto na tela para você ver!
+            divErro.innerText = "Acesso negado (" + error.code + "). Verifique os dados.";
+            console.error("Erro completo do Firebase:", error);
+        });
+}
 
         // 4. FUNÇÃO DE LOGOUT DO PAINEL
         function fazerLogout() {
