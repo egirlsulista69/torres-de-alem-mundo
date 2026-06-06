@@ -1872,4 +1872,51 @@
     });
 </script>
 
+    <button id="btn-deslogar-rpg" onclick="fazerLogout()" style="
+    position: fixed; 
+    top: 15px; 
+    right: 15px; 
+    z-index: 99999;
+    background: #121212; 
+    color: #8b0000; 
+    border: 1px solid #8b0000;
+    padding: 8px 15px; 
+    font-family: 'Georgia', serif; 
+    font-weight: bold;
+    border-radius: 4px; 
+    cursor: pointer; 
+    box-shadow: 0 0 10px rgba(139,0,0,0.3);
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 1px;
+">Sair da Conta</button>
+
+<script>
+    // FUNÇÃO PARA FAZER LOGOUT
+    function fazerLogout() {
+        if (confirm("Deseja realmente sair da conta? Suas alterações foram salvas automaticamente.")) {
+            auth.signOut().then(() => {
+                // Limpa o localStorage local para que a ficha do próximo jogador comece zerada
+                localStorage.removeItem('ficha_evandro_v2');
+                
+                // Recarrega a página para fazer a janela de login reaparecer instantaneamente
+                window.location.reload();
+            }).catch((error) => {
+                console.error("Erro ao deslogar:", error);
+                alert("Erro ao tentar sair do sistema.");
+            });
+        }
+    }
+
+    // Oculta o botão de deslogar caso o usuário NÃO esteja logado (evita aparecer na tela de login)
+    auth.onAuthStateChanged((user) => {
+        const btnSair = document.getElementById('btn-deslogar-rpg');
+        if (user) {
+            btnSair.style.display = 'block';
+        } else {
+            btnSair.style.display = 'none';
+        }
+    });
+</script>
+    
 </body></html>
