@@ -186,17 +186,6 @@
         
         let escutadorAtivo = null;
 
-        // gerar email fake
-function gerarEmailFake(usuario) {
-    let nomeLimpo = usuario.trim().toLowerCase();
-    if (nomeLimpo.includes('@')) {
-        nomeLimpo = nomeLimpo.split('@')[0];
-    }
-    nomeLimpo = nomeLimpo.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-    nomeLimpo = nomeLimpo.replace(/[^a-z0-9_.-]/g, '');
-    return nomeLimpo + "@rpg.com";
-}
-
         // 2. MONITOR DE SESSÃO DO MESTRE
         auth.onAuthStateChanged((user) => {
             const janelaLogin = document.getElementById('janela-login-mestre');
