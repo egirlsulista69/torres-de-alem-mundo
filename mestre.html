@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel do Mestre - Monitor em Tempo Real</title>
+    <style>
+        /* --- ESTILO GÓTICO / DARK FANTASY (Combinando com a sua ficha) --- */
+        * {
+            box-sizing: border-box;
+            font-family: 'Georgia', 'Times New Roman', Times, serif;
+            transition: background-color 0.5s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        body {
+            background-color: #050505;
+            color: #c0c0c0;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            background-image: radial-gradient(circle at center, #1a1a1a 0%, #000000 100%);
+        }
+
+        h1 {
+            color: #8b0000;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px rgba(139, 0, 0, 0.6);
+            margin-bottom: 30px;
+            border-bottom: 1px solid #8b0000;
+            padding-bottom: 15px;
+        }
+
+        .grid-jogadores {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .card-jogador {
+            background-color: #121212;
+            border: 2px solid #333;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.8);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Linha decorativa gótica superior no card quando ativo */
+        .card-jogador::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 3px;
+            background: #8b0000;
+            box-shadow: 0 0 10px #8b0000;
+        }
+
+        .card-jogador h3 {
+            color: #8b0000;
+            margin-top: 0;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #444;
+            padding-bottom: 8px;
+            font-size: 20px;
+            letter-spacing: 1px;
+        }
+
+        .status-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .status-linha {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #1a1a1a;
+            padding: 8px 12px;
+            border: 1px solid #2a2a2a;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .status-linha span:first-child {
+            color: #888;
+        }
+
+        .destaque {
+            color: #e0e0e0;
+            font-weight: bold;
+            text-shadow: 0 0 5px rgba(255,255,255,0.1);
+        }
+
+        .alerta-vida { color: #ff4d4d !important; text-shadow: 0 0 8px rgba(255, 77, 77, 0.4); }
+        .alerta-mana { color: #3399ff !important; text-shadow: 0 0 8px rgba(51, 153, 255, 0.4); }
+        .alerta-combate { color: #ffcc00 !important; }
+
+        .mensagem-vazia {
+            text-align: center;
+            width: 100%;
+            grid-column: 1 / -1;
+            color: #666;
+            font-style: italic;
+            font-size: 18px;
+            margin-top: 50px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Painel de Monitoramento do Mestre</h1>
+
+    <div class="grid-jogadores" id="painel-jogadores">
+        <p class="mensagem-vazia">Aguardando as brumas se dissiparem e os jogadores conectarem...</p>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+
+    <script>
+        // 1. CONFIGURAÇÃO DO SEU FIREBASE (Cole exatamente as suas credenciais aqui)
+        const firebaseConfig = {
+  apiKey: "AIzaSyATx_yfWsUCHRemaC3oOKr_EQV8MV-T_GU",
+  authDomain: "as-torres-de-alem-mundo.firebaseapp.com",
+  projectId: "as-torres-de-alem-mundo",
+  storageBucket: "as-torres-de-alem-mundo.firebasestorage.app",
+  messagingSenderId: "720161540231",
+  appId: "1:720161540231:web:c1a634f8596f43877b5022"
+};
+
+        // Inicializa o Firebase no Painel
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        // 2. ESCUTADOR EM TEMPO REAL
+        database.ref('personagens').on('value', (snapshot) => {
+            const personagens = snapshot.val();
+            const painel = document.getElementById('painel-jogadores');
+            painel.innerHTML = ""; // Limpa o painel para atualizar os dados ao vivo
+
+            if (!personagens) {
+                painel.innerHTML = '<p class="mensagem-vazia">Nenhum personagem encontrado no Limbo (Banco de Dados).</p>';
+                return;
+            }
+
+            // Varre todos os usuários logados no banco
+            for (let id in personagens) {
+                const ficha = personagens[id];
+
+                /* IMPORTANTE: Seus campos salvam direto pelo ID do input.
+                  Substitua os termos abaixo entre aspas pelos IDs EXATOS que você usou no seu HTML.
+                  Exemplo hipotético: se o input do nome for id="nome-personagem", mude para ficha['nome-personagem']
+                */
+                const nomePersonagem = ficha['nome'] || ficha['txt-nome'] || "Viajante Sem Nome";
+                const raca = ficha['raca'] || ficha['txt-raca'] || "-";
+                const classe = ficha['classe'] || ficha['txt-classe'] || "-";
+
+                // Mapeamento dos status vitais (Altere o texto dentro de [''] para os IDs dos seus campos de Vida/Mana)
+                const vidaAtual = ficha['vida_atual'] || ficha['vida-atual'] || "0";
+                const vidaMax = ficha['vida_max'] || ficha['vida-max'] || "0";
+                const manaAtual = ficha['mana_atual'] || ficha['mana-atual'] || "0";
+                const manaMax = ficha['mana_max'] || ficha['mana-max'] || "0";
+
+                // Valores capturados diretamente dos seletores nativos da sua ficha (#bp-val e #defesa-val)
+                const valorBP = ficha['bp-val'] || "0";
+                const valorDefesa = ficha['defesa-val'] || "0";
+
+                // Monta o Card Visual com tema Dark condizente com a sua ficha
+                const card = document.createElement('div');
+                card.className = 'card-jogador';
+                card.innerHTML = `
+                    <h3>${nomePersonagem}</h3>
+
+                    <div class="status-container">
+                        <div class="status-linha"><span>Raça:</span> <span class="destaque">${raca}</span></div>
+                        <div class="status-linha"><span>Classe:</span> <span class="destaque">${classe}</span></div>
+                    </div>
+
+                    <div class="status-container">
+                        <div class="status-linha"><span>Vida:</span> <span class="destaque alerta-vida">${vidaAtual}/${vidaMax}</span></div>
+                        <div class="status-linha"><span>Mana:</span> <span class="destaque alerta-mana">${manaAtual}/${manaMax}</span></div>
+                    </div>
+
+                    <div class="status-container">
+                        <div class="status-linha"><span>Defesa:</span> <span class="destaque alerta-combate">${valorDefesa}</span></div>
+                        <div class="status-linha"><span>B.P:</span> <span class="destaque alerta-combate">${valorBP}</span></div>
+                    </div>
+                `;
+
+                painel.appendChild(card);
+            }
+        });
+    </script>
+</body>
+</html>
