@@ -550,22 +550,6 @@
             salvarAutomatico();
         }
 
-        // --- SISTEMA DE SALVAMENTO AUTOMÁTICO EM MEMÓRIA LOCAL ---
-        const salvarAutomatico = () => {
-            const dados = {
-                inputs: {},
-                checkboxes: {},
-                textareas: {},
-                selects: {},
-                
-                itens: [],
-                habilidades: [],
-                obeliscos: [],
-                monolitos: [],
-                torres: [],
-                pilares: []
-            };
-
             // Captura inputs comuns
             document.querySelectorAll('input:not([type="checkbox"]):not([type="radio"])').forEach(el => {
                 if (el.id) dados.inputs[el.id] = el.value;
@@ -612,9 +596,6 @@
             document.querySelectorAll('#lista-pilar .pilar-linha').forEach(el => {
                 dados.pilares.push(el.querySelector('input').value);
             });
-
-            // Salva na memória do computador do jogador
-            localStorage.setItem('ficha_evandro_v2', JSON.stringify(dados));
         };
 
         // --- ENXERTO DOS DADOS DE VOLTA NA TELA ---
@@ -669,42 +650,6 @@
 
             atualizarBarras();
         }
-
-        // --- SISTEMA ONLOAD ORIGINAL ---
-        window.onload = function() {
-            let salvo = null;
-            
-            const salvoLocal = localStorage.getItem('ficha_evandro_v2');
-            const salvoAntigo = localStorage.getItem('ficha_evandro');
-            if (salvoLocal) salvo = JSON.parse(salvoLocal);
-            else if (salvoAntigo) salvo = JSON.parse(salvoAntigo);
-
-            if (salvo) {
-                aplicarDadosNaTela(salvo);
-            } else {
-                // Configuração de ficha limpa na primeira vez
-                novoItem();
-                novaHabilidade();
-                novoObelisco();
-                novoMonolito();
-                novaTorre();
-                novoPilar();
-                atualizarBarras();
-            }
-
-            // Monitora digitação manual para salvar
-            document.body.addEventListener('input', (e) => {
-                if (e.target.matches('input, select, textarea')) {
-                    salvarAutomatico();
-                }
-            });
-            
-            document.body.addEventListener('change', (e) => {
-                 if (e.target.matches('input[type="checkbox"], select')) {
-                    salvarAutomatico();
-                }
-            });
-        };
 
         // Escutadores extras para os cálculos do seu RPG
         document.querySelectorAll('.attr-big-input, #bp-val, #defesa-val').forEach(el => {
