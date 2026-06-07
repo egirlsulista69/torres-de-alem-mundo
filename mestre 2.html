@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel do Mestre - Monitor em Tempo Real</title>
+    <style>
+        /* --- ESTILO GÓTICO / DARK FANTASY (Idêntico à sua ficha) --- */
+        * {
+            box-sizing: border-box;
+            font-family: 'Georgia', 'Times New Roman', Times, serif; 
+            transition: background-color 0.5s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        body {
+            background-color: #050505;
+            color: #c0c0c0;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            background-image: radial-gradient(circle at center, #1a1a1a 0%, #000000 100%);
+        }
+
+        h1 {
+            color: #8b0000;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px rgba(139, 0, 0, 0.6);
+            margin-bottom: 30px;
+            border-bottom: 1px solid #8b0000;
+            padding-bottom: 15px;
+        }
+
+        .grid-jogadores {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .card-jogador {
+            background-color: #121212;
+            border: 2px solid #333;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.8);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Linha decorativa gótica superior */
+        .card-jogador::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 3px;
+            background: #8b0000;
+            box-shadow: 0 0 10px #8b0000;
+        }
+
+        .card-jogador h3 {
+            color: #8b0000;
+            margin-top: 0;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #444;
+            padding-bottom: 8px;
+            font-size: 20px;
+            letter-spacing: 1px;
+            text-align: center;
+        }
+
+        .status-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .status-linha {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #1a1a1a;
+            padding: 8px 12px;
+            border: 1px solid #2a2a2a;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .status-linha span:first-child {
+            color: #888;
+            font-weight: bold;
+            font-size: 0.85em;
+            text-transform: uppercase;
+        }
+
+        .destaque {
+            color: #e0e0e0;
+            font-weight: bold;
+        }
+
+        .alerta-vida { color: #ff4d4d !important; text-shadow: 0 0 8px rgba(255, 77, 77, 0.4); }
+        .alerta-corrupcao { color: #9d00ff !important; text-shadow: 0 0 8px rgba(157, 0, 255, 0.4); }
+        .alerta-combate { color: #ffcc00 !important; }
+
+        .mensagem-vazia {
+            text-align: center;
+            width: 100%;
+            grid-column: 1 / -1;
+            color: #666;
+            font-style: italic;
+            font-size: 18px;
+            margin-top: 50px;
+        }
+
+        /* --- TELA DE LOGIN DO PAINEL DO MESTRE --- */
+        #janela-login-mestre {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.95); display: flex; justify-content: center;
+            align-items: center; z-index: 99999;
+        }
+        .caixa-login {
+            background: #121212; border: 2px solid #8b0000; padding: 30px;
+            border-radius: 8px; width: 320px; text-align: center;
+            box-shadow: 0 0 20px rgba(139, 0, 0, 0.5);
+        }
+        .caixa-login h2 { color: #8b0000; margin-top: 0; margin-bottom: 20px; }
+        .caixa-login input {
+            width: 100%; margin-bottom: 15px; padding: 10px;
+            background: #1a1a1a; border: 1px solid #444; color: #e0e0e0; border-radius: 4px;
+        }
+        .caixa-login button {
+            width: 100%; padding: 10px; background: #8b0000; color: white;
+            border: none; border-radius: 4px; cursor: pointer; font-weight: bold;
+        }
+        .caixa-login button:hover { background: #b30000; }
+        #erro-login { color: #ff3333; font-size: 13px; margin-top: 10px; }
+        
+        #btn-deslogar-mestre {
+            position: fixed; top: 15px; right: 15px; z-index: 9999;
+            background: #121212; color: #8b0000; border: 1px solid #8b0000;
+            padding: 8px 15px; font-weight: bold; border-radius: 4px; cursor: pointer;
+            text-transform: uppercase; font-size: 11px;
+        }
+    </style>
+</head>
+<body>
+
+    <button id="btn-deslogar-mestre" onclick="fazerLogout()" style="display: none;">Sair do Painel</button>
+
+    <div id="janela-login-mestre">
+        <div class="caixa-login">
+            <h2>Autenticação do Mestre</h2>
+            <input type="text" id="login-usuario" placeholder="Nome de Usuário">
+            <input type="password" id="login-senha" placeholder="Senha">
+            <button onclick="fazerLogin()">Acessar Painel</button>
+            <div id="erro-login"></div>
+        </div>
+    </div>
+
+    <h1>Painel de Monitoramento do Mestre</h1>
+    
+    <div class="grid-jogadores" id="painel-jogadores">
+        <p class="mensagem-vazia">Aguardando as brumas se dissiparem e os jogadores conectarem...</p>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+
+    <script>
+        // 1. CONFIGURAÇÃO DO SEU FIREBASE (Mantida original com sucesso)
+        const firebaseConfig = {
+            apiKey: "AIzaSyATx_yfWsUCHRemaC3oOKr_EQV8MV-T_GU",
+            authDomain: "as-torres-de-alem-mundo.firebaseapp.com",
+            projectId: "as-torres-de-alem-mundo",
+            storageBucket: "as-torres-de-alem-mundo.firebasestorage.app",
+            messagingSenderId: "720161540231",
+            appId: "1:720161540231:web:c1a634f8596f43877b5022"
+        };
+
+        // Inicializa o Firebase no Painel do Mestre
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        const auth = firebase.auth();
+        
+        let escutadorAtivo = null;
+
+        // FUNÇÃO DE MASCARAMENTO INTELIGENTE (Adicionada com sucesso para aceitar mestre@rpg.com)
+        function gerarEmailFake(usuario) {
+            let nomeLimpo = usuario.trim().toLowerCase();
+            
+            // Se já for um e-mail completo digitado, usa ele sem modificar nada!
+            if (nomeLimpo.includes('@')) {
+                return nomeLimpo;
+            }
+            
+            // Se for apenas o nome de usuário comum, aplica as travas padrão
+            nomeLimpo = nomeLimpo.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            nomeLimpo = nomeLimpo.replace(/[^a-z0-9_.-]/g, '');
+            if (!nomeLimpo) nomeLimpo = "usuarioanonimo";
+            return nomeLimpo + "@sistemarpg.com";
+        }
+
+        // 2. MONITOR DE SESSÃO DO MESTRE
+        auth.onAuthStateChanged((user) => {
+            const janelaLogin = document.getElementById('janela-login-mestre');
+            const btnDeslogar = document.getElementById('btn-deslogar-mestre');
+            
+            if (user) {
+                janelaLogin.style.display = 'none';
+                btnDeslogar.style.display = 'block';
+                ativarMonitoramentoAoVivo(); // Corrigido para chamar o nome exato da função
+            } else {
+                janelaLogin.style.display = 'flex';
+                btnDeslogar.style.display = 'none';
+                document.getElementById('painel-jogadores').innerHTML = '<p class="mensagem-vazia">Efetue o login para visualizar as fichas.</p>';
+                
+                if (escutadorAtivo) {
+                    database.ref('personagens').off('value', escutadorAtivo);
+                    escutadorAtivo = null;
+                }
+            }
+        });
+
+        // 3. FUNÇÃO DE LOGIN DO PAINEL
+        function fazerLogin() {
+            const usuario = document.getElementById('login-usuario').value;
+            const senha = document.getElementById('login-senha').value;
+            const divErro = document.getElementById('erro-login');
+            divErro.innerText = "";
+
+            if (!usuario || !senha) {
+                divErro.innerText = "Preencha todos os campos.";
+                return;
+            }
+
+            const emailGerado = gerarEmailFake(usuario);
+
+            auth.signInWithEmailAndPassword(emailGerado, senha)
+                .catch((error) => {
+                    divErro.innerText = "Acesso negado (" + error.code + "). Verifique os dados.";
+                    console.error("Erro completo do Firebase:", error);
+                });
+        }
+
+        // 4. FUNÇÃO DE LOGOUT DO PAINEL
+        function fazerLogout() {
+            auth.signOut().catch(err => console.error(err));
+        }
+
+        // 5. ESCUTADOR EM TEMPO REAL (Corrigido o nome de 'activar' para 'ativar' para sincronizar perfeitamente)
+        function ativarMonitoramentoAoVivo() {
+            if (escutadorAtivo) return; // Evita abrir conexões duplicadas
+
+            escutadorAtivo = database.ref('personagens').on('value', (snapshot) => {
+                const personagens = snapshot.val();
+                const painel = document.getElementById('painel-jogadores');
+                painel.innerHTML = ""; 
+
+                if (!personagens) {
+                    painel.innerHTML = '<p class="mensagem-vazia">Nenhum personagem encontrado no banco de dados.</p>';
+                    return;
+                }
+
+                for (let id in personagens) {
+                    const ficha = personagens[id];
+                    
+                    const nomePersonagem = ficha['char-name'] || "Viajante Sem Nome";
+                    const classe = ficha['char-class'] || "Sem Classe";
+                    const nivel = ficha['char-level'] || "1";
+                    const vidaAtual = ficha['vida-atual'] || "0";
+                    const vidaMax = ficha['max-vida'] || "0";
+                    const corrupcaoAtual = ficha['corrupcao-atual'] || "0";
+                    const corrupcaoMax = ficha['max-corrupcao'] || "0";
+                    const valorDefesa = ficha['defesa-val'] || "0";
+                    const valorBP = ficha['bp-val'] || "0";
+
+                    const card = document.createElement('div');
+                    card.className = 'card-jogador';
+                    card.innerHTML = `
+                        <h3>${nomePersonagem}</h3>
+                        
+                        <div class="status-container">
+                            <div class="status-linha"><span>Classe:</span> <span class="destaque">${classe}</span></div>
+                            <div class="status-linha"><span>Nível:</span> <span class="destaque">${nivel}</span></div>
+                        </div>
+
+                        <div class="status-container">
+                            <div class="status-linha"><span>Vida:</span> <span class="destaque alerta-vida">${vidaAtual}/${vidaMax}</span></div>
+                            <div class="status-linha"><span>Corrupção:</span> <span class="destaque alerta-corrupcao">${corrupcaoAtual}/${corrupcaoMax}</span></div>
+                        </div>
+
+                        <div class="status-container">
+                            <div class="status-linha"><span>Defesa:</span> <span class="destaque alerta-combate">${valorDefesa}</span></div>
+                            <div class="status-linha"><span>B.P:</span> <span class="destaque alerta-combate">${valorBP}</span></div>
+                        </div>
+                    `;
+                    
+                    painel.appendChild(card);
+                }
+            });
+        }
+    </script>
+</body>
+</html>
