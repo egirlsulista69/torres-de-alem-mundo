@@ -2,7 +2,7 @@
 <html lang="pt-BR"><head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ficha Interativa - Evandro Nunes</title>
+    <title>Ficha Interativa </title>
     <style>
         /* --- ESTILO GÓTICO / DARK FANTASY --- */
         * {
@@ -540,7 +540,7 @@
     <div class="container">
         <header>
             <h1>FICHA DE PERSONAGEM</h1>
-            <input type="text" id="char-name" class="character-name" value="Evandro Nunes" style="text-align: center;">
+            <input type="text" id="char-name" class="character-name" value="nome" style="text-align: center;">
         </header>
 
         <div class="main-stats">
@@ -1601,7 +1601,7 @@
         // 1. Auto-Save (LocalStorage)
         function salvarAutomatico() {
             const dados = coletarDadosParaObjeto();
-            localStorage.setItem('ficha_evandro_v2', JSON.stringify(dados));
+            localStorage.setItem('ficha_v2', JSON.stringify(dados));
         }
 
         // 2. Exportar JSON (Download)
@@ -1613,7 +1613,7 @@
             const htmlContent = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
             const blob = new Blob([htmlContent], {type: 'text/html'});
             const url = URL.createObjectURL(blob);
-            const nomeArquivo = `Ficha_Evandro_${dados.classe || 'Personagem'}.html`;
+            const nomeArquivo = `Ficha${dados.classe || 'Personagem'}.html`;
 
             const a = document.createElement('a');
             a.href = url;
@@ -1657,7 +1657,7 @@
 
         function resetarFicha() {
             if(confirm("Tem certeza? Isso apagará os dados salvos no navegador.")) {
-                localStorage.removeItem('ficha_evandro_v2');
+                localStorage.removeItem('ficha_v2');
                 location.reload();
             }
         }
@@ -1675,8 +1675,8 @@
 
             // Se não houver embutido, tenta localStorage
             if (!salvo) {
-                const salvoLocal = localStorage.getItem('ficha_evandro_v2');
-                const salvoAntigo = localStorage.getItem('ficha_evandro');
+                const salvoLocal = localStorage.getItem('ficha_v2');
+                const salvoAntigo = localStorage.getItem('ficha');
                 if (salvoLocal) salvo = JSON.parse(salvoLocal);
                 else if (salvoAntigo) salvo = JSON.parse(salvoAntigo);
             }
@@ -1833,7 +1833,7 @@
             const dados = snapshot.val();
             if (dados) {
                 console.log("Ficha do jogador carregada!");
-                localStorage.setItem('ficha_evandro_v2', JSON.stringify(dados));
+                localStorage.setItem('ficha_v2', JSON.stringify(dados));
                 if (typeof aplicarDadosNaTela === "function") {
                     aplicarDadosNaTela(dados);
                 }
@@ -1849,7 +1849,7 @@
     function sincronizarComFirebase() {
         if (!usuarioLogadoUid) return;
 
-        const dadosLocais = localStorage.getItem('ficha_evandro_v2');
+        const dadosLocais = localStorage.getItem('ficha_v2');
         if (dadosLocais) {
             try {
                 const dadosJson = JSON.parse(dadosLocais);
@@ -1896,7 +1896,7 @@
         if (confirm("Deseja realmente sair da conta? Suas alterações foram salvas automaticamente.")) {
             auth.signOut().then(() => {
                 // Limpa o localStorage local para que a ficha do próximo jogador comece zerada
-                localStorage.removeItem('ficha_evandro_v2');
+                localStorage.removeItem('ficha_v2');
                 
                 // Recarrega a página para fazer a janela de login reaparecer instantaneamente
                 window.location.reload();
